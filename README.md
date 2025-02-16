@@ -3,7 +3,7 @@
 A real-time chat web application built with modern technologies for seamless and instant messaging.
 
 ## 🚀 Live Demo  
-🔗 Hosted on **Render**: [Click here to try it](#) (Replace `#` with your deployed URL)
+🔗 Hosted on **Render**: [Click here to try it](https://realtime-chat-app-b2cu.onrender.com/login)
 
 ---
 
@@ -29,16 +29,8 @@ A real-time chat web application built with modern technologies for seamless and
 ## ✨ Features  
 ✅ **User Authentication** (Sign up, login, and logout)  
 ✅ **Real-time Messaging** with Socket.io  
-✅ **Group & Private Chats**  
 ✅ **Online/Offline Status**  
 ✅ **Profile Picture Upload**  
 ✅ **Lightweight & Responsive UI**  
 
 ---
-
-## 📦 Installation & Setup  
-
-### **1️⃣ Clone the Repository**  
-```sh
-git clone https://github.com/himanshuverma8/chat-app.git
-cd chat-app
