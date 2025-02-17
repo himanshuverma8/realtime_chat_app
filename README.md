@@ -3,7 +3,7 @@
 A real-time chat web application built with modern technologies for seamless and instant messaging.
 
 ## 🚀 Live Demo  
-🔗 Hosted on **Render**: [Click here to try it](https://realtime-chat-app-b2cu.onrender.com/login)
+🔗 [Click here to try it](https://friendschat.fun))
 
 ---
 
