@@ -3,7 +3,7 @@
 A real-time chat web application built with modern technologies for seamless and instant messaging.
 
 ## 🚀 Live Demo  
-🔗 [Click here to try it]((https://friendschat.fun))
+🔗 [Click here to try it](https://friendschat.fun)
 
 ---
 
