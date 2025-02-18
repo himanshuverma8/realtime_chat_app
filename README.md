@@ -1,7 +1,7 @@
 # 💬 Full-Stack Real-Time Chat App
 
 A real-time chat web application built with modern technologies for seamless and instant messaging.
-# working on a more complex app version from scratch soon:)
+working on a more complex app version from scratch soon:)
 
 ## 🚀 Live Demo  
 🔗 [Click here to try it](https://friendschat.fun)
