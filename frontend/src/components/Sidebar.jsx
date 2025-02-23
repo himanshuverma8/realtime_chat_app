@@ -3,12 +3,17 @@ import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
+import { formatDistanceToNow } from "date-fns"; // For formatting last seen time
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
 const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
 
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers, lastSeen } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+    
 
   useEffect(() => {
     getUsers();
@@ -71,7 +76,8 @@ const Sidebar = () => {
             <div className="hidden lg:block text-left min-w-0">
               <div className="font-medium truncate">{user.fullName}</div>
               <div className="text-sm text-zinc-400">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+                {onlineUsers.includes(user._id) ? "Online" : lastSeen[user._id]  ? `Last seen ${dayjs(lastSeen[user._id]).fromNow()}`
+      : "Offline"}
               </div>
             </div>
           </button>

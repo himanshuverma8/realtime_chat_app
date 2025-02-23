@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        lastSeen: {
+            type: String,
+            default: "",
+        }
     }, { timestamps: true }
 );
 

@@ -12,6 +12,7 @@ export const useAuthStore = create((set, get) => ({
   isUpdatingProfile: false,
   isCheckingAuth: true,
   onlineUsers: [],
+  lastSeen: {}, // Stores last seen timestamps
   socket: null,
 
   checkAuth: async () => {
@@ -95,10 +96,14 @@ export const useAuthStore = create((set, get) => ({
 
     set({ socket: socket });
 
-    socket.on("getOnlineUsers", (userIds) => {
-      set({ onlineUsers: userIds });
+    socket.on("getOnlineUsers", (users) => {
+      const onlineUsers = users.filter((user) => user.status === "online").map((u) => u.userId);
+      const lastSeen = Object.fromEntries(users.map((u) => [u.userId, u.lastSeen]));
+
+      set({ onlineUsers, lastSeen });
     });
   },
+
   disconnectSocket: () => {
     if (get().socket?.connected) get().socket.disconnect();
   },
