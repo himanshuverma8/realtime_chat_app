@@ -28,6 +28,7 @@ working on a more complex app version from scratch soon:)
 ---
 
 ## ✨ Features  
+✅ **Last Seen Feature Added @24Feb2025**  
 ✅ **User Authentication** (Sign up, login, and logout)  
 ✅ **Real-time Messaging** with Socket.io  
 ✅ **Online/Offline Status**  
