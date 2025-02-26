@@ -77,7 +77,7 @@ const Sidebar = () => {
               <div className="font-medium truncate">{user.fullName}</div>
               <div className="text-sm text-zinc-400">
                 {onlineUsers.includes(user._id) ? "Online" : lastSeen[user._id]  ? `Last seen ${dayjs(lastSeen[user._id]).fromNow()}`
-      : "Offline"}
+      : `Last seen ${dayjs(user.lastSeen).fromNow()}`}
               </div>
             </div>
           </button>

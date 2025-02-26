@@ -38,7 +38,7 @@ const ChatHeader = () => {
           <div>
             <h3 className="font-medium">{selectedUser.fullName}</h3>
             <p className="text-sm text-base-content/70">
-              {isOnline ? "Online" : lastSeenText}
+              {isOnline ? "Online" : userLastSeen ? `Last seen ${dayjs(userLastSeen).fromNow()}` : `Last seen ${dayjs(selectedUser.lastSeen).fromNow()}`}
             </p>
           </div>
         </div>
