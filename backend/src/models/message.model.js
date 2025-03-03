@@ -18,6 +18,11 @@ const messageSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    status: {
+      type: String,
+      enum: ["sent", "delivered", "seen"], // Add status field
+      default: "sent", // Default to "sent" when message is created
+    },
   },
   { timestamps: true }
 );

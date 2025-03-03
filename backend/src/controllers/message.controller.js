@@ -52,6 +52,7 @@ export const sendMessage = async (req,res) => {
             text,
             image: imageUrl,
         })
+        console.log(newMessage);
 
         await newMessage.save();
 
@@ -65,6 +66,56 @@ export const sendMessage = async (req,res) => {
 
         
     } catch (error) {
-        
+        res.status(500).json({error: "Error in sending message from message controller"});
     }
 }
+
+export const markMessagesAsSeen = async (req, res) => {
+    try {
+      const { senderId } = req.params;
+      const receiverId = req.user.id; // Assuming `req.user.id` is the authenticated user's ID
+  
+      if (!senderId) {
+        return res.status(400).json({ message: "Sender ID is required" });
+      }
+  
+      // Update all messages from sender to receiver to "seen"
+      await Message.updateMany(
+        { senderId, receiverId, status: { $ne: "seen" } }, // Only update messages that are not already "seen"
+        { $set: { status: "seen" } }
+      );
+        console.log("message marked bro");
+      res.json({ message: "Messages marked as seen" });
+    } catch (error) {
+      console.error("Error marking messages as seen:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+
+  import mongoose from "mongoose";  // Ensure mongoose is imported
+
+export const getUnReadCounts = async (req, res) => {
+    try {
+        const userId = new mongoose.Types.ObjectId(req.user.id); // ✅ Convert to ObjectId
+
+        const unreadCounts = await Message.aggregate([
+            { $match: { receiverId: userId, status: { $ne: "seen" } } },
+            { 
+                $group: { 
+                    _id: "$senderId", 
+                    count: { $sum: 1 } 
+                } 
+            }
+        ]);
+
+        const result = unreadCounts.reduce((acc, { _id, count }) => {
+            acc[_id.toString()] = count; // ✅ Convert ObjectId to string
+            return acc;
+        }, {});
+
+        res.json(result);
+    } catch (error) {
+        console.error("Error fetching unread messages count:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};

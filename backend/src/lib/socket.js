@@ -1,8 +1,8 @@
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
-import mongoose from "mongoose";
-import User from "../models/user.model.js"; // Import your User model
+import Message from "../models/message.model.js";
+import User from "../models/user.model.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -13,60 +13,96 @@ const io = new Server(server, {
     },
 });
 
-// Stores online users and their last seen timestamps
-const userSocketMap = {};
-const userLastSeenMap = {}; // Local memory storage
+const userSocketMap = new Map();
+const userLastSeenMap = new Map();
 
 export function getReceiverSocketId(userId) {
-    return userSocketMap[userId];
+    return userSocketMap.get(userId);
 }
 
 io.on("connection", (socket) => {
-    console.log("A user connected", socket.id);
+    console.log("✅ User connected:", socket.id);
 
     const userId = socket.handshake.query.userId;
-
+    
     if (userId) {
-        userSocketMap[userId] = socket.id;
-        delete userLastSeenMap[userId]; // Remove last seen when they come online
+        userSocketMap.set(userId, socket.id);
+        userLastSeenMap.delete(userId);
     }
 
-    // Emit updated online users with last seen timestamps
     io.emit("getOnlineUsers", getOnlineUsersWithLastSeen());
 
-    socket.on("disconnect", async () => {
-        console.log("A user disconnected", socket.id);
-        
-        const lastSeen = new Date();
-        userLastSeenMap[userId] = lastSeen; // Store last seen in memory
+    socket.on("sendMessage", async (messageData) => {
+        const { senderId, receiverId } = messageData;
+    
+        io.to(userSocketMap.get(senderId)).emit("messageSent", messageData);
+    
+        if (userSocketMap.has(receiverId)) {
+            io.to(userSocketMap.get(receiverId)).emit("messageReceived", {
+                ...messageData,
+                status: "delivered",
+            });
+        }
+    
+        // Emit event to update unread count
+        const unreadCount = await Message.countDocuments({
+            senderId,
+            receiverId,
+            status: { $ne: "seen" },
+        });
+    
+        io.to(userSocketMap.get(receiverId)).emit("updateUnreadCount", { senderId, unreadCount });
+    });
+    
 
-        // Save to DB (Optional: if you want persistence)
+    socket.on("markAsSeen", async ({ senderId, receiverId }) => {
+        try {
+            await Message.updateMany(
+                { senderId, receiverId, status: { $ne: "seen" } },
+                { $set: { status: "seen" } }
+            );
+
+            if (userSocketMap.has(senderId)) {
+                io.to(userSocketMap.get(senderId)).emit("messageSeen", { senderId, receiverId });
+            }
+        } catch (error) {
+            console.error("⚠️ Error updating seen messages:", error);
+        }
+    });
+
+    socket.on("disconnect", async () => {
+        console.log("❌ User disconnected:", socket.id);
+
+        if (!userId) return;
+
+        const lastSeen = new Date();
+        userLastSeenMap.set(userId, lastSeen);
+
         try {
             await User.findByIdAndUpdate(userId, { lastSeen });
         } catch (error) {
-            console.error("Error updating last seen:", error);
+            console.error("⚠️ Error updating last seen:", error);
         }
 
-        delete userSocketMap[userId];
-
-        // Emit updated online users with last seen timestamps
+        userSocketMap.delete(userId);
         io.emit("getOnlineUsers", getOnlineUsersWithLastSeen());
     });
 });
 
-// Function to get online users along with their last seen timestamps
 function getOnlineUsersWithLastSeen() {
-    return Object.keys(userSocketMap).map(userId => ({
+    const onlineUsers = Array.from(userSocketMap.keys()).map(userId => ({
         userId,
         status: "online",
         lastSeen: null,
-    })).concat(
-        Object.keys(userLastSeenMap).map(userId => ({
-            userId,
-            status: "offline",
-            lastSeen: userLastSeenMap[userId],
-        }))
-    );
+    }));
+
+    const offlineUsers = Array.from(userLastSeenMap.entries()).map(([userId, lastSeen]) => ({
+        userId,
+        status: "offline",
+        lastSeen,
+    }));
+
+    return [...onlineUsers, ...offlineUsers];
 }
 
 export { io, app, server };
