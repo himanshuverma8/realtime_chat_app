@@ -1,27 +1,35 @@
 import { X } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
-import { formatDistanceToNow } from "date-fns"; // For formatting last seen time
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+
 dayjs.extend(relativeTime);
 
 const ChatHeader = () => {
-  const { selectedUser, setSelectedUser } = useChatStore();
+  const { selectedUser, setSelectedUser, typingUsers } = useChatStore();
   const { onlineUsers, lastSeen } = useAuthStore();
 
   if (!selectedUser) return null; // Ensure there's a selected user
 
-  // Check if the user is online
-  const isOnline = onlineUsers.includes(selectedUser._id);
+  const userId = selectedUser._id;
+  const isOnline = onlineUsers.includes(userId);
+  const isTyping = typingUsers[userId] || false; // Check if the user is typing
+  const userLastSeen = lastSeen[userId];
+  
+  // console.log("Typing Users:", typingUsers);
+  // console.log("User ID:", userId);
+  // console.log("isTyping:", isTyping);
+  
 
-  // Fetch last seen timestamp for the selected user
-  const userLastSeen = lastSeen[selectedUser._id];
-
-  // Format last seen time if available
-  const lastSeenText = userLastSeen
-    ? `Last seen ${dayjs(userLastSeen).fromNow()}`
-    : "Offline";
+  let statusText = "Offline";
+  if (isTyping) {
+    statusText = "Typing...";
+  } else if (isOnline) {
+    statusText = "Online";
+  } else if (userLastSeen) {
+    statusText = `Last seen ${dayjs(userLastSeen).fromNow()}`;
+  }
 
   return (
     <div className="p-2.5 border-b border-base-300">
@@ -37,8 +45,8 @@ const ChatHeader = () => {
           {/* User info */}
           <div>
             <h3 className="font-medium">{selectedUser.fullName}</h3>
-            <p className="text-sm text-base-content/70">
-              {isOnline ? "Online" : userLastSeen ? `Last seen ${dayjs(userLastSeen).fromNow()}` : `Last seen ${dayjs(selectedUser.lastSeen).fromNow()}`}
+            <p className={`text-sm text-base-content/70 transition-opacity duration-200 ${isTyping ? "text-green-500" : ""}`}>
+              {statusText}
             </p>
           </div>
         </div>
