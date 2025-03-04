@@ -28,8 +28,9 @@ working on a more complex app version from scratch soon:)
 ---
 
 ## ✨ Features  
-✅ **Message: Realtime Unread Messages Count Feature Added @03March2025**  
-✅ **Message: Realtime Sent,Delivered,Seen Feature Added @03March2025**  
+✅ **Realtime Typing Indicator Added @05March2025**  
+✅ **Realtime Unread Messages Count Feature Added @03March2025**  
+✅ **Realtime Sent,Delivered,Seen Feature Added @03March2025**  
 ✅ **Realtime User Last Seen Feature Added @24Feb2025**  
 ✅ **User Authentication** (Sign up, login, and logout)  
 ✅ **Real-time Messaging** with Socket.io  
