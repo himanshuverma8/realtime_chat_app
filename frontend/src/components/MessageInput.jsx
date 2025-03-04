@@ -1,17 +1,58 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
 
-const MessageInput = () => {
+const MessageInput = ({ receiverId }) => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { sendMessage } = useChatStore();
+  const typingTimeoutRef = useRef(null);
+
+  const { sendMessage, emitTyping, emitStopTyping } = useChatStore();
+
+  useEffect(() => {
+    if (text.trim()) {
+      emitTyping(receiverId);
+
+      // Clear previous timeout
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+      // Set timeout to stop typing after 1.5 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        emitStopTyping(receiverId);
+      }, 1500);
+    } else {
+      emitStopTyping(receiverId);
+    }
+
+    // Cleanup on unmount
+    return () => clearTimeout(typingTimeoutRef.current);
+  }, [text, receiverId, emitTyping, emitStopTyping]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!text.trim() && !imagePreview) return;
+
+    try {
+      await sendMessage({
+        text: text.trim(),
+        image: imagePreview,
+      });
+
+      setText("");
+      setImagePreview(null);
+      emitStopTyping(receiverId); // Ensure stop typing is emitted
+      console.log("enter is pressed");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (!file.type.startsWith("image/")) {
+    if (!file?.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
@@ -26,25 +67,6 @@ const MessageInput = () => {
   const removeImage = () => {
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!text.trim() && !imagePreview) return;
-
-    try {
-      await sendMessage({
-        text: text.trim(),
-        image: imagePreview,
-      });
-
-      // Clear form
-      setText("");
-      setImagePreview(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    }
   };
 
   return (
@@ -106,4 +128,5 @@ const MessageInput = () => {
     </div>
   );
 };
+
 export default MessageInput;
