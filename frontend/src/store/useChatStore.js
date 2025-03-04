@@ -6,10 +6,11 @@ import { useAuthStore } from "./useAuthStore";
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
-  unreadMessages: {}, // Store unread message counts
+  unreadMessages: {},
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  typingUsers: {},
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -40,7 +41,6 @@ export const useChatStore = create((set, get) => ({
     const { selectedUser, messages } = get();
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-      
       set({ messages: [...messages, { ...res.data, status: "sent" }] });
 
       const socket = useAuthStore.getState().socket;
@@ -80,7 +80,7 @@ export const useChatStore = create((set, get) => ({
 
     socket.on("messageSeen", ({ senderId, receiverId }) => {
       if (selectedUser._id !== receiverId) return;
-      
+
       set({
         messages: get().messages.map((msg) =>
           msg.senderId === senderId ? { ...msg, status: "seen" } : msg
@@ -104,7 +104,7 @@ export const useChatStore = create((set, get) => ({
 
     try {
       await axiosInstance.post(`/messages/seen/${selectedUser._id}`);
-      
+
       const socket = useAuthStore.getState().socket;
       socket.emit("markAsSeen", {
         senderId: selectedUser._id,
@@ -128,7 +128,64 @@ export const useChatStore = create((set, get) => ({
     socket.off("messageSeen");
     socket.off("messageSent");
     socket.off("updateUnreadCount");
+    socket.off("userTyping");
+    socket.off("userStoppedTyping");
   },
+
+  subscribeToTypingEvents: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    console.log("Subscribing to typing events...");
+
+    socket.on("userTyping", ({ senderId }) => {
+      console.log("Received userTyping event from:", senderId);
+
+      set((state) => ({
+        typingUsers: { ...state.typingUsers, [senderId]: true },
+      }));
+    });
+
+    socket.on("userStoppedTyping", ({ senderId }) => {
+      console.log("Received userStoppedTyping event from:", senderId);
+
+      set((state) => {
+        const updatedTypingUsers = { ...state.typingUsers };
+        delete updatedTypingUsers[senderId];
+        return { typingUsers: updatedTypingUsers };
+      });
+    });
+  },
+
+  unsubscribeFromTypingEvents: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    console.log("Unsubscribing from typing events...");
+    socket.off("userTyping");
+    socket.off("userStoppedTyping");
+  },
+
+  emitTyping: (receiverId) => {
+    const { authUser } = useAuthStore.getState();
+    const socket = useAuthStore.getState().socket;
+    if (!socket || !authUser) return;
+
+    console.log(`Emitting typing event from ${authUser._id} to ${receiverId}`);
+
+    socket.emit("typing", { senderId: authUser._id, receiverId });
+  },
+
+  emitStopTyping: (receiverId) => {
+    const { authUser } = useAuthStore.getState();
+    const socket = useAuthStore.getState().socket;
+    if (!socket || !authUser || !receiverId) return;
+  
+    console.log(`Emitting stopTyping event from ${authUser._id} to ${receiverId}`);
+  
+    socket.emit("stopTyping", { senderId: authUser._id, receiverId });
+  },
+  
 
   setSelectedUser: (selectedUser) => {
     set({ selectedUser });
