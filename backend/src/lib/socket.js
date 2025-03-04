@@ -32,6 +32,21 @@ io.on("connection", (socket) => {
 
     io.emit("getOnlineUsers", getOnlineUsersWithLastSeen());
 
+    // ✅ Fixed Typing Event Emission
+    socket.on("typing", ({ senderId, receiverId }) => {
+        const receiverSocketId = getReceiverSocketId(receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("userTyping", { senderId });
+        }
+    });
+
+    socket.on("stopTyping", ({ senderId, receiverId }) => {
+        const receiverSocketId = getReceiverSocketId(receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("userStoppedTyping", { senderId });
+        }
+    });
+
     socket.on("sendMessage", async (messageData) => {
         const { senderId, receiverId } = messageData;
     
@@ -53,7 +68,6 @@ io.on("connection", (socket) => {
     
         io.to(userSocketMap.get(receiverId)).emit("updateUnreadCount", { senderId, unreadCount });
     });
-    
 
     socket.on("markAsSeen", async ({ senderId, receiverId }) => {
         try {
