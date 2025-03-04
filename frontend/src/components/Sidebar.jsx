@@ -87,7 +87,7 @@ const Sidebar = () => {
               {onlineUsers.includes(user._id) && (
                 <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full ring-2 ring-zinc-900" />
               )}
-            {unreadMessages[user._id] > 0 && (
+            {(unreadMessages[user._id] > 0 ) && (
   <span className="absolute top-0 left-0 min-w-5 min-h-5 px-1 text-xs text-white bg-red-400 rounded-full flex items-center justify-center ring-2 ring-zinc-900">
     {unreadMessages[user._id]}
   </span>
