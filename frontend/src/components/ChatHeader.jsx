@@ -22,7 +22,7 @@ const ChatHeader = () => {
   // console.log("isTyping:", isTyping);
   
 
-  let statusText = "Offline";
+  let statusText = `Last seen ${dayjs(selectedUser.lastSeen).fromNow()}`;
   if (isTyping) {
     statusText = "Typing...";
   } else if (isOnline) {
